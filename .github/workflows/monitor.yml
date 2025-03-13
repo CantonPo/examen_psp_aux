@@ -32,7 +32,7 @@ jobs:
           git commit -m "Actualización de monitor.log"
           
           # Hacer pull para obtener los últimos cambios antes del push
-          git pull --strategy=recursive --strategy-option=theirs origin main
+          git pull --strategy=recursive --strategy-option=theirs origin master
 
           # Hacer push con el token de GitHub
           git push https://x-access-token:${GIT  run: |
