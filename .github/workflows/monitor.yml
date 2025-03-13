@@ -1,0 +1,50 @@
+name: Monitorización Web
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Se ejecuta cada 10 minutos
+  workflow_dispatch:
+
+jobs:
+  check_website:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Comprobar estado de la web
+        run: |
+          URL="https://mercadona.es"  # O la URL que estés monitoreando
+          STATUS_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" $URL)
+          TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
+          echo "$TIMESTAMP - Código: $STATUS_CODE" >> monitor.log
+
+      - name: Configurar Git
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Guardar resultado y hacer pull antes del push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+        run: |
+          git add monitor.log
+          git commit -m "Actualización de monitor.log"
+          
+          # Hacer pull para obtener los últimos cambios antes del push
+          git pull --strategy=recursive --strategy-option=theirs origin main
+
+          # Hacer push con el token de GitHub
+          git push https://x-access-token:${GIT  run: |
+          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          -d text="Se ejecutó el workflow de monitorización web: \nResultado: Código de estado - $STATUS_CODE \nHora: $TIMESTAMP"
+      - name: Enviar mensaje a Telegram
+        run: |
+          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          -d text="Se ejecutó el workflow de monitorización- name: Enviar mensaje a TelegramMP"
+ 
+      
+
+

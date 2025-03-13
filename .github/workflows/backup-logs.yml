@@ -1,0 +1,40 @@
+name: Backup de logs del VPS
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Se ejecuta cada 10 minutos
+  workflow_dispatch:  # Permite ejecutar el workflow manualmente desde la interfaz de GitHub
+
+jobs:
+  backup_logs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar dependencias necesarias
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+
+      - name: Conectar al VPS y hacer backup de logs
+        run: |
+          # Crear un directorio para los logs si no existe
+          mkdir -p logs-backup
+
+          # Usar sshpass para conectarse con la contraseña almacenada en los secretos
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@172.233.111.192 "tar -czf /tmp/logs.tar.gz /var/log/*"
+
+          # Descargar el archivo de logs desde el VPS
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" scp root@172.233.111.192:/tmp/logs.tar.gz ./logs-backup/logs.tar.gz
+
+      - name: Subir backup al repositorio
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add logs-backup/logs.tar.gz
+          git commit -m "Backup de logs"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
+
+
+
